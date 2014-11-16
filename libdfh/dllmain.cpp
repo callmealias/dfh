@@ -24,15 +24,16 @@ NTSTATUS WINAPI Hooked_NtSetInformationFile(
     TRACE(L"dfh: Hooked_NtSetInformationFile\n");
 
     // Is this a delete operation?
-    if(FileInformation != NULL && Length == sizeof(BOOLEAN) && FileInformationClass == FileDispositionInformation && *(BOOLEAN*) FileInformation != FALSE) {
+    if(FileInformation != NULL && Length == sizeof(BOOLEAN) && FileInformationClass == FileDispositionInformation && *(BOOLEAN*) FileInformation != FALSE && !IsFileHandleDirectory(FileHandle)) {
       
       FILE* metadata_file = NULL;
       WCHAR path[MAX_PATH] = { 0 };
+      WCHAR path_metadata[MAX_PATH] = { 0 };
 
       do {
         
         // Get full file path from handle  
-        if(!GetPathNameByHandleW(FileHandle, path, MAX_PATH)) {
+        if(!GetPathNameByHandle(FileHandle, path, MAX_PATH)) {
           TRACE(L"dfh: Hooked_NtSetInformationFile: Error getting path from handle\n");
           break;
         }
@@ -51,25 +52,24 @@ NTSTATUS WINAPI Hooked_NtSetInformationFile(
         swprintf_s(path_new, MAX_PATH, L"%s\\%s", DELETED_FILES_DIRECTORY, guid);
 
         // Generate metadata file name
-        WCHAR path_metadata[MAX_PATH] = { 0 };
         swprintf_s(path_metadata, MAX_PATH, L"%s\\%s.txt", DELETED_FILES_DIRECTORY, guid);
 
         // Copy file
         if(!CopyFileW(path,path_new,TRUE)) {
-          TRACE(L"dfh: Hooked_NtSetInformationFile: Error copying file\n");
+          TRACE(L"dfh: Hooked_NtSetInformationFile: Error copying file: (%s)\n", path);
           break;
         }
 
         // Write metadata file
         // Format: TimeStamp,ProcessId,OrigFilename,NewFileName
         if(_wfopen_s(&metadata_file, path_metadata, L"w")) {
-          TRACE(L"dfh: Hooked_NtSetInformationFile: Error opening metadata file for writing\n");
+          TRACE(L"dfh: Hooked_NtSetInformationFile: Error opening metadata file for writing: (%s)\n", path_metadata);
           break;
         }
         DWORDLONG filetime = GetCurrentUTCFileTime();
         DWORD process_id = GetCurrentProcessId();
         if(fwprintf_s(metadata_file,L"%llu,%d,%s,%s\r\n", filetime, process_id, path, path_new) < 0) {
-          TRACE(L"dfh: Hooked_NtSetInformationFile: Error writing to metadata file\n");
+          TRACE(L"dfh: Hooked_NtSetInformationFile: Error writing to metadata file: (%s)\n", path_metadata);
           break;
         }
 
@@ -78,7 +78,7 @@ NTSTATUS WINAPI Hooked_NtSetInformationFile(
       // Cleanup
       if(metadata_file) {
         if(fclose(metadata_file)) {
-          TRACE(L"dfh: Hooked_NtSetInformationFile: Error closing metadata file\n");
+          TRACE(L"dfh: Hooked_NtSetInformationFile: Error closing metadata file: (%s)\n", path_metadata);
         }
       }
 

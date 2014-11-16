@@ -8,23 +8,15 @@
 #define LIBDFH_DLL L"libdfh.dll"
 #endif
 
-int wmain(int argc, wchar_t* argv[])
-{
-  int exitCode = 1;
 
-  HMODULE hModule = NULL;
+// Simulates a simple file delete
+BOOL TestFileDelete() {
+  
+  BOOL success = FALSE;
+
   HANDLE hFile = NULL;
 
   do {
-
-    // Just in case it already exists
-    DeleteFileW(L"test.txt");
-
-    hModule = LoadLibraryW(LIBDFH_DLL);
-    if(!hModule) {
-      wprintf(L"Error loading DLL");
-      break;
-    }
 
     hFile = CreateFileW(L"test.txt", GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
     if(!hFile) {
@@ -51,7 +43,73 @@ int wmain(int argc, wchar_t* argv[])
       break;
     }
 
-    exitCode = 0;
+    success = TRUE;
+
+  } while(0);
+
+  if(hFile) {
+    CloseHandle(hFile);
+    hFile = NULL;
+  }
+
+  return success;
+
+}
+
+
+// Simulates a directory delete
+BOOL TestDirectoryDelete() {
+  BOOL success = false;
+
+  do {
+
+    if(!CreateDirectoryW(L"test",NULL)) {
+      wprintf(L"Error creating directory");
+      break;
+    }
+
+    if(!RemoveDirectoryW(L"test")) {
+      wprintf(L"Error deleting directory");
+      break;
+    }
+
+    success = TRUE;
+
+  } while(0);
+
+  return success;
+}
+
+int wmain(int argc, wchar_t* argv[])
+{
+  int exit_code = 1;
+
+  HMODULE hModule = NULL;
+
+  do {
+    
+    // Cleanup from prior test run
+    DeleteFileW(L"test.txt");
+    RemoveDirectoryW(L"test");
+
+    // Inject DLL
+    hModule = LoadLibraryW(LIBDFH_DLL);
+    if(!hModule) {
+      wprintf(L"Error loading DLL");
+      break;
+    }
+
+    if(!TestFileDelete()) {
+       wprintf(L"Test file delete failed");
+       break;
+    }
+
+    if(!TestDirectoryDelete()) {
+       wprintf(L"Test directory delete failed");
+       break;
+    }
+
+    exit_code = 0;
 
   } while(0);
 
@@ -61,11 +119,6 @@ int wmain(int argc, wchar_t* argv[])
     hModule = NULL;
   }
 
-  if(hFile) {
-    CloseHandle(hFile);
-    hFile = NULL;
-  }
-
-	return exitCode;
+	return exit_code;
 }
 

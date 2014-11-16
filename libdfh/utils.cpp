@@ -29,7 +29,7 @@ BOOL CreateGuid(PWSTR buffer) {
   return success;
 }
 
-BOOL GetPathNameByHandleW(HANDLE handle, PWSTR buffer, DWORD buffer_length)
+BOOL GetPathNameByHandle(HANDLE handle, PWSTR buffer, DWORD buffer_length)
 {
   BOOL success = FALSE;
 
@@ -84,4 +84,13 @@ BOOL GetPathNameByHandleW(HANDLE handle, PWSTR buffer, DWORD buffer_length)
   } while(0);
 
   return success;
+}
+
+BOOL IsFileHandleDirectory(HANDLE handle) {
+  BOOL is_dir = FALSE;
+  BY_HANDLE_FILE_INFORMATION file_info = {};
+  if(GetFileInformationByHandle(handle, &file_info)) {
+    is_dir = (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
+  }
+  return is_dir;
 }
