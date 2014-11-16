@@ -68,7 +68,7 @@ NTSTATUS WINAPI Hooked_NtSetInformationFile(
         }
         DWORDLONG filetime = GetCurrentUTCFileTime();
         DWORD process_id = GetCurrentProcessId();
-        if(fwprintf_s(metadata_file,L"%llu,%d,%s,%s", filetime, process_id, path, path_new) < 0) {
+        if(fwprintf_s(metadata_file,L"%llu,%d,%s,%s\r\n", filetime, process_id, path, path_new) < 0) {
           TRACE(L"dfh: Hooked_NtSetInformationFile: Error writing to metadata file\n");
           break;
         }
