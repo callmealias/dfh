@@ -84,7 +84,7 @@ int wmain(int argc, wchar_t* argv[])
       wprintf(L"Error uninstalling hook \r\n");
     }
   } else {
-    wprintf(L"Delete File Hook 1.0a - Intercept file deletes at Windows Native API level \r\n");
+    wprintf(L"Delete File Hook 1.1a - Intercept file deletes at Windows Native API level \r\n");
     wprintf(L"https://github.com/pmolchanov/dfh \r\n");
     wprintf(L"\r\n");
     wprintf(L"usage: dfh.exe [/i] [/u] \r\n");

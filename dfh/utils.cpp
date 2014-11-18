@@ -73,12 +73,10 @@ BOOL CreateAllAccessDirectory(LPWSTR path)
                  L") ";
 
     if(!ConvertStringSecurityDescriptorToSecurityDescriptorW(ssd, SDDL_REVISION_1, &(sa.lpSecurityDescriptor), NULL)) {
-      printf("ConvertStringSecurityDescriptorToSecurityDescriptorW");
       break;
     }
 
     if(!CreateDirectoryW(path, &sa) && (GetLastError() != ERROR_ALREADY_EXISTS)) {
-      printf("CreateDirectoryW");
       break;
     }
 
