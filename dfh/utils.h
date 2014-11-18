@@ -19,6 +19,16 @@ BOOL RegistrySetValue(
   _In_ DWORD value_type // REG_SZ, REG_DWORD, etc..
   );
 
+// Creates the specified directory, and configures it with security settings that should give full access to any principal with any integrity level.
+// In other words, it creates a directory that is open to the world for full access.
+// 
+// icacls.exe C:\dfh
+// dfh Everyone:(OI)(CI)(F)
+//     Mandatory Label\Untrusted Mandatory Level:
+BOOL CreateAllAccessDirectory(
+  _In_ LPWSTR path
+  );
+
 // Gets the directory containing this EXE
 // e.g. C:\Foo
 BOOL GetAppDirPath(

@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include "utils.h"
 
-#include "Shlwapi.h"
+#include <Shlwapi.h>
 #pragma comment(lib,"Shlwapi.lib")
+
+#include <Sddl.h>
 
 BOOL IsWow64Process() {
   BOOL is_wow64 = false;
@@ -43,6 +45,50 @@ BOOL RegistrySetValue(HKEY hkey, DWORD view, LPWSTR subkey, LPWSTR value_name, v
   }
   return success;
 }
+
+BOOL CreateAllAccessDirectory(LPWSTR path)
+{
+  BOOL success = FALSE;
+
+  do {
+
+    SECURITY_ATTRIBUTES sa = {};
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = FALSE;
+    LPWSTR ssd = L"D:("      // DACL
+                 L"A;"       // Type: Access Allowed
+                 L"OICI;"    // Applies To: This folder, subfolders, and files
+                 L"GA;"      // Access Rights: GENERIC_ALL
+                 L";"        // Object Type: NULL
+                 L";"        // Injerited Object Type: NULLL
+                 L"S-1-1-0"  // Principal: World (Everyone)
+                 L") "
+                 L"S:("      // SACL
+                 L"ML;"      // Type: Mandatory Label
+                 L";"        // Applies To: NULL
+                 L";"        // Access Rights: NULL
+                 L";"        // Object Type: NULL
+                 L";"        // Injerited Object Type: NULLL
+                 L"S-1-16-0" // Principal: Mandatory Label\Untrusted
+                 L") ";
+
+    if(!ConvertStringSecurityDescriptorToSecurityDescriptorW(ssd, SDDL_REVISION_1, &(sa.lpSecurityDescriptor), NULL)) {
+      printf("ConvertStringSecurityDescriptorToSecurityDescriptorW");
+      break;
+    }
+
+    if(!CreateDirectoryW(path, &sa) && (GetLastError() != ERROR_ALREADY_EXISTS)) {
+      printf("CreateDirectoryW");
+      break;
+    }
+
+    success = TRUE;
+
+  } while(0);
+
+  return success;
+}
+
 
 BOOL GetAppDirPath(LPWSTR buffer, size_t length) {
   BOOL success = FALSE;

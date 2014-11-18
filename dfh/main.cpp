@@ -14,8 +14,7 @@ BOOL InstallHook() {
 
   do {
 
-    // TODO: Set security attributes and integrity level on folder
-    if(!CreateDirectory(DELETED_FILES_DIRECTORY, NULL) && (GetLastError() != ERROR_ALREADY_EXISTS)) {
+    if(!CreateAllAccessDirectory(DELETED_FILES_DIRECTORY)) {
       break;
     }
   

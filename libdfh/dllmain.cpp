@@ -21,8 +21,6 @@ NTSTATUS WINAPI Hooked_NtSetInformationFile(
   FILE_INFORMATION_CLASS FileInformationClass
   ) {
 
-    TRACE(L"dfh: Hooked_NtSetInformationFile\n");
-
     // Is this a delete operation?
     if(FileInformation != NULL && Length == sizeof(BOOLEAN) && FileInformationClass == FileDispositionInformation && *(BOOLEAN*) FileInformation != FALSE && !IsFileHandleDirectory(FileHandle)) {
       
@@ -35,6 +33,12 @@ NTSTATUS WINAPI Hooked_NtSetInformationFile(
         // Get full file path from handle  
         if(!GetPathNameByHandle(FileHandle, path, MAX_PATH)) {
           TRACE(L"dfh: Hooked_NtSetInformationFile: Error getting path from handle\n");
+          break;
+        }
+
+        // Ignore deletes originating from the DELETED_FILES_DIRECTORY
+        if(_wcsnicmp(path, DELETED_FILES_DIRECTORY, (_countof(DELETED_FILES_DIRECTORY) - 1)) == 0) {
+          TRACE(L"dfh: Hooked_NtSetInformationFile: Ignoring delete: (%s)\n", path);
           break;
         }
 
@@ -90,28 +94,25 @@ NTSTATUS WINAPI Hooked_NtSetInformationFile(
 
 void SetHooks()
 {
-  TRACE(L"dfh: SetHooks\n");
-
   if(!Original_NtSetInformationFile) {
     Original_NtSetInformationFile = (_NtSetInformationFile)GetProcAddress(GetModuleHandleW(L"ntdll"), "NtSetInformationFile");
   }
 
-	if (Mhook_SetHook((PVOID*)&Original_NtSetInformationFile, Hooked_NtSetInformationFile))
-	{
+	if (Original_NtSetInformationFile && Mhook_SetHook((PVOID*)&Original_NtSetInformationFile, Hooked_NtSetInformationFile)) {
     TRACE(L"dfh: SetHooks: Hooked NtSetInformationFile\n");
-	}
-  
+	} else {
+    TRACE(L"dfh: SetHooks: Error hooking NtSetInformationFile\n");
+  } 
 }
 
 void ClearHooks()
 {
-
-  TRACE(L"dfh: ClearHooks\n");
-	if (Mhook_Unhook((PVOID*)&Hooked_NtSetInformationFile))
-	{
+	if (Mhook_Unhook((PVOID*)&Hooked_NtSetInformationFile)) {
+    Original_NtSetInformationFile = NULL;
     TRACE(L"dfh: ClearHooks: Unhooked NtSetInformationFile\n");
-	}
-  
+	} else {
+    TRACE(L"dfh: ClearHooks: Error unhooking NtSetInformationFile\n");
+  }
 }
 
 // Entry point
