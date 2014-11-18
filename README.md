@@ -8,9 +8,8 @@ The dfh tool intercepts file deletes originating from most windows processes (an
 Usage:
 ==
 
-1. Install the [Microsoft Visual C++ 2012 Redistributables](http://www.microsoft.com/en-us/download/details.aspx?id=30679) for both x86 and x64. 
-2. Visit [GitHub releases](https://github.com/pmolchanov/dfh/releases) and download precompiled binaries for Microsoft Windows.
-3. Open a command prompt as *Administrator* and run the following command to get help: ``dfh.exe /?``
+1. Visit [GitHub releases](https://github.com/pmolchanov/dfh/releases) and download precompiled binaries for Microsoft Windows.
+2. Open a command prompt as *Administrator* and run the following command to get help: ``dfh.exe /?``
 
 Compile from source
 == 
